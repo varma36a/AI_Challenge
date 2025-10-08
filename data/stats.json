@@ -1,0 +1,35 @@
+{
+  "gender.proportions": { "Male": 0.52, "Female": 0.48 },
+  "satisfaction.by_gender": {
+    "Male": { "Satisfied": 0.62, "Dissatisfied": 0.38 },
+    "Female": { "Satisfied": 0.64, "Dissatisfied": 0.36 }
+  },
+  "age.bins": { "18-30": 0.22, "31-45": 0.38, "46-60": 0.28, "61+": 0.12 },
+  "travel.category.counts": { "Business": 0.7, "Personal": 0.3 },
+  "distance.by_category.mean": { "Business": 1150, "Personal": 820 },
+  "ratings.seat_comfort.by_class": {
+    "Economy": 3.2,
+    "Economy Plus": 3.8,
+    "Business": 4.4
+  },
+  "ratings.food.by_class": {
+    "Economy": 3.1,
+    "Economy Plus": 3.6,
+    "Business": 4.2
+  },
+  "delay.avg": { "DepDelay": 14.2, "ArrDelay": 16.9 },
+  "delay.impact_on_satisfaction": {
+    "corr_total_delay_satisfaction": -0.31,
+    "narrative": "Higher total delay reduces satisfaction."
+  },
+  "model.metrics": {
+    "leaderboard": [
+      { "model": "LogReg", "accuracy": 0.79, "f1": 0.78 },
+      { "model": "KNN", "accuracy": 0.76, "f1": 0.74 },
+      { "model": "DecisionTree", "accuracy": 0.75, "f1": 0.73 },
+      { "model": "RandomForest", "accuracy": 0.82, "f1": 0.81 }
+    ],
+    "best": "RandomForest",
+    "confusion_matrix": { "tp": 157, "tn": 205, "fp": 41, "fn": 57 }
+  }
+}
