@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
+name: blue
+endpoint_name: ws1-gceac
+model: azureml:lovingnapkindn047:1   # 👈 replace with your exact model name:version if different
+instance_type: Standard_F2s_v2
+instance_count: 1
