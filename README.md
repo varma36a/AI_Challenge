@@ -21,6 +21,305 @@ What you should have:
 
 Key commands:
 
+
+
+
+
+
+
+
+# CLOUD ROADMAP
+
+
+Perfect 👍 — let’s now reconstruct the **exact Azure resource creation plan** — from absolute zero (no resources) to a **fully working Azure OpenAI + Azure Machine Learning integration** for your **Customer Satisfaction** app.
+
+---
+
+# 🚀 Complete Azure Resource Creation Plan (End-to-End)
+
+> Works on **Azure Portal**, **Azure CLI**, or **Azure AI Studio (Foundry)** — optimized for lowest cost, simplest structure, and compliance with competition guidelines.
+
+---
+
+## 🧭 Step 0 — Prerequisites
+
+### ✅ What you need
+
+* An **active Azure subscription**
+* Role: **Contributor or Owner** (you need permissions to create resources & register providers)
+* CLI installed:
+
+  ```bash
+  az login
+  az account show
+  ```
+
+---
+
+## ☁️ Step 1 — Create a Resource Group
+
+A resource group keeps all your Azure resources together for easier cleanup later.
+
+```bash
+az group create --name rohit36a-rg --location eastus2
+```
+
+You’ll see output confirming `provisioningState: Succeeded`.
+
+---
+
+## 🧩 Step 2 — Register Required Resource Providers
+
+Azure services won’t deploy if you haven’t registered these providers.
+
+Run **all** of these once:
+
+```bash
+az provider register --namespace Microsoft.MachineLearningServices
+az provider register --namespace Microsoft.CognitiveServices
+az provider register --namespace Microsoft.Storage
+az provider register --namespace Microsoft.ContainerRegistry
+az provider register --namespace Microsoft.KeyVault
+az provider register --namespace Microsoft.ManagedIdentity
+az provider register --namespace Microsoft.Network
+az provider register --namespace Microsoft.Insights
+```
+
+Verify registration:
+
+```bash
+az provider list --query "[?registrationState=='NotRegistered'].namespace" -o table
+```
+
+→ should show **none** or only optional ones left unregistered.
+
+---
+
+## 🤖 Step 3 — Create an Azure Machine Learning Workspace
+
+### Option 1 — Portal
+
+1. Go to **Azure Portal → Create a Resource → Machine Learning**
+2. Fill:
+
+   * Subscription: your current subscription
+   * Resource Group: `rohit36a-rg`
+   * Workspace name: `ws1`
+   * Region: **East US 2** (to match OpenAI region)
+   * Storage, Key Vault, App Insights: auto-create (default)
+   * Container Registry: auto-create
+
+Click **Review + Create** → **Create**
+
+---
+
+### Option 2 — CLI
+
+```bash
+az ml workspace create -g rohit36a-rg -w ws1 --location eastus2
+```
+
+Verify:
+
+```bash
+az ml workspace show -g rohit36a-rg -w ws1
+```
+
+---
+
+## 🧠 Step 4 — Create an Azure OpenAI Resource
+
+### Portal steps
+
+1. Go to **Azure Portal → Create a Resource → “Azure OpenAI”**
+2. Choose:
+
+   * Subscription: same as workspace
+   * Resource group: `rohit36a-rg`
+   * Region: **East US 2** (important: matches your ML workspace)
+   * Name: e.g. `rohit-aoai`
+3. Pricing Tier: `S0 (Standard)` — most economical for competition
+4. Accept terms → Create
+
+---
+
+## 🧑‍💻 Step 5 — Deploy a Model in Azure OpenAI
+
+Once resource is created:
+
+1. Go to the resource in Azure Portal.
+2. Click **Go to Azure AI Foundry** (or **Azure OpenAI Studio**) → **Deployments**.
+3. Click **+ Create new deployment**.
+4. Choose model:
+   ✅ Recommended model: `gpt-4o-mini` (fast + cheap)
+   Alternative: `gpt-35-turbo` (cheapest)
+5. Deployment name: `gpt-mini`
+6. Type: **Standard**
+7. Click **Deploy**.
+
+This creates a deployment like:
+
+```
+AZURE_OPENAI_ENDPOINT=https://rohit-aoai.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT=gpt-mini
+AZURE_OPENAI_API_KEY=<shown under Keys and Endpoint>
+```
+
+---
+
+## 🧮 Step 6 — Upload & Train Model in Azure ML (Customer Satisfaction)
+
+### Upload dataset
+
+1. Go to **Azure Machine Learning Studio** ([https://ml.azure.com/](https://ml.azure.com/)).
+2. Select your workspace: `ws1`.
+3. In the left panel → **Data → + Create → From local files**.
+4. Upload your dataset: `customersatisfaction.csv`
+
+   * Name: `custsat-data`
+   * Type: Tabular
+   * Store in default blob datastore
+   * Confirm schema → Create.
+
+---
+
+### Run Automated ML
+
+1. In left panel → **Automated ML → New automated ML job**
+
+2. Settings:
+
+   * Dataset: `custsat-data`
+   * Experiment name: `custsat-exp`
+   * Target column: `Satisfaction`
+   * Compute: Create new compute
+
+     * Name: `cpu-cluster`
+     * Type: `CPU`
+     * Size: `STANDARD_DS11_V2`
+     * Min nodes: 0, Max nodes: 1
+   * Task type: **Classification**
+   * Primary metric: **Accuracy**
+   * Enable `Explain best model` ✅
+
+3. Click **Start job**.
+
+---
+
+### After run completes
+
+1. Go to **Jobs → custsat-exp → Models → Best model**
+2. Click **Deploy → Real-time endpoint**
+3. Name: `custsat-endpoint-01`
+4. Deployment type: **Managed online**
+5. Instance type: `Standard_F2s_v2` (cheapest)
+6. Instance count: 1
+7. Click **Deploy**
+
+---
+
+## 🧾 Step 7 — Verify & Retrieve Endpoint Keys
+
+Once deployment is complete:
+
+1. Go to **Endpoints → Real-time endpoints → custsat-endpoint-01**
+2. Copy:
+
+   * **REST endpoint (ends with `/score`)**
+   * **Primary key**
+
+Example:
+
+```
+AML_SCORING_URI=https://ws1-gceac.eastus2.inference.ml.azure.com/score
+AML_API_KEY=<primary-key-value>
+AML_DEPLOYMENT=blue   # only if multiple deployments under one endpoint
+```
+
+---
+
+## ⚙️ Step 8 — Configure `.env` File (Local App)
+
+In your FastAPI project root (`AI_Challenge/.env`):
+
+```env
+# Azure OpenAI
+AZURE_OPENAI_ENDPOINT=https://rohit-aoai.openai.azure.com/
+AZURE_OPENAI_API_KEY=<your-openai-key>
+AZURE_OPENAI_DEPLOYMENT=gpt-mini
+OPENAI_API_VERSION=2024-05-01-preview
+
+# Azure ML
+AML_SCORING_URI=https://ws1-gceac.eastus2.inference.ml.azure.com/score
+AML_API_KEY=<your-ml-endpoint-key>
+AML_DEPLOYMENT=blue
+```
+
+⚠️ Add `.env` to `.gitignore`:
+
+```bash
+echo ".env" >> .gitignore
+```
+
+---
+
+## 🧪 Step 9 — Run App Locally
+
+```bash
+cd AI_Challenge
+source .venv/bin/activate
+uvicorn app.main:app --reload --port 8000
+```
+
+Then test endpoint:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Predict satisfaction for Age=32, Gender=Male, TravelCategory=Business, TravelClass=Economy Plus, Distance=900, DepDelay=10, ArrDelay=5, SeatComfort=4, Food=3, Entertainment=4, LegRoom=3, Cleanliness=4, Luggage=4, BoardingPoint=DEL"}'
+```
+
+---
+
+## 🛠 Step 10 — Common Errors & Fixes
+
+| Issue                                                   | Root Cause                       | Fix                                                                             |
+| ------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------- |
+| ❌ `424 Failed Dependency: input_data missing`           | Wrong payload shape              | Use `"input_data": {"columns": [...], "data": [[...]]}` as shown in Consume tab |
+| ❌ `SubscriptionNotRegistered`                           | Providers not registered         | Run `az provider register` commands                                             |
+| ❌ `BadRequestError: Invalid schema for response_format` | Invalid OpenAI schema definition | Remove or simplify `response_format`                                            |
+| ❌ GitHub push blocked                                   | Secret in commit                 | Remove `.env` from Git history, rotate keys                                     |
+| ❌ `uvicorn not found`                                   | Package not installed in venv    | `pip install uvicorn` inside `.venv`                                            |
+
+---
+
+## 🧹 Step 11 — Cleanup (Optional)
+
+When done, delete all resources:
+
+```bash
+az group delete --name rohit36a-rg --yes --no-wait
+```
+
+---
+
+## ✅ At the End You’ll Have
+
+| Resource               | Purpose                     | Example Name             |
+| ---------------------- | --------------------------- | ------------------------ |
+| Resource Group         | Container for all           | `rohit36a-rg`            |
+| Azure Machine Learning | Model training + deployment | `ws1`                    |
+| Azure OpenAI           | LLM (chat model)            | `rohit-aoai`             |
+| Storage Account        | Backing for ML workspace    | auto-generated           |
+| Container Registry     | Model container store       | auto-generated           |
+| Real-time Endpoint     | REST inference API          | `custsat-endpoint-01`    |
+| FastAPI App            | Your orchestrator           | local (runs with `.env`) |
+
+---
+
+Would you like me to also give you the **Azure CLI-only version** (no UI clicks at all — pure terminal automation from resource creation → deployment → endpoint → key retrieval)? It’s handy if you ever need to script this or repeat it.
+
+
 ```bash
 cd /path/to/AI_Challenge
 python3 -m venv .venv
